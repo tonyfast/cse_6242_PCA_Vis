@@ -1,0 +1,180 @@
+<!--
+CSE6242 Project Proposal Visualization
+Graphs a stress-strain curve and displays image
+of sample depending on location of mouseover
+ -->
+
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+.axis text {
+    font: 10px sans-serif;
+}
+
+.axis path,
+.axis line {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+}
+
+.container {
+    float: left;
+}
+
+.overlay {
+    fill: none;
+    pointer-events: all;
+}
+
+.focus circle {
+    fill: none;
+    stroke: steelblue;
+}
+
+</style>
+
+<head>
+    <title>CSE6242 Project Proposal Viz</title>
+</head>
+
+<body>
+    <!--div for chart area-->
+    <div class="container" id="area1"></div>
+    <!--div for image area-->
+    <div class="container" id="area2"></div>
+</body>
+
+<script src="d3/d3.v3.min.js"></script>
+<script type="text/javascript">
+    
+    //set margins
+    var margin = {top: 20, right: 20, bottom: 70, left: 45},
+    width = 400 - margin.left - margin.right,
+    height = 300 - margin.top - margin.bottom;
+    
+    //set axis ranges
+    var xRange = d3.scale.linear().range([0, width]);
+    var yRange = d3.scale.linear().range([height, 0]);
+    
+    //set axes
+    var xAxis = d3.svg.axis()
+                .scale(xRange)
+                .orient("bottom");
+    var yAxis = d3.svg.axis()
+                .scale(yRange)
+                .orient("left");
+    
+    //area for chart
+    var svg = d3.select("#area1").append("svg")
+                .attr("width", width + margin.left + margin.right+10)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    
+    //area for image
+    var image = d3.select("#area2").append("svg")
+                  .attr("width", width + margin.left + margin.right+10)
+                  .attr("height", height + margin.top + margin.bottom)
+                  .append("g")
+                  .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    //import data from json
+    //format should be:
+    //      [{ "x": xvalue,
+    //         "y": yvalue,
+    //         "pic": "image.jpg"
+    //      }]
+    d3.json("sscurve.json", function(error, data) {
+
+        //set x and y domains
+        xRange.domain([0, d3.max(data, function(d) { return d.x;})]);
+        yRange.domain([0, d3.max(data, function(d) { return d.y; })]);
+
+        //set x axis
+        svg.append("g")
+           .attr("class", "x axis")
+           .attr("transform", "translate(0," + height + ")")
+           .call(xAxis)
+           .append("text")
+           .attr("transform","translate(" + width/2 + ",30)")
+           .attr("text-anchor", "middle")
+           .style("font-weight", "bold")
+           .style("font-size", "13px")
+           .text("Strain"); //x axis label
+        
+        //set y axis
+        svg.append("g")
+           .attr("class", "y axis")
+           .call(yAxis)
+           .append("text")
+           .attr("transform","translate(-30," + height/2 + ") rotate(-90)")
+           .attr("text-anchor", "middle")
+           .style("font-weight", "bold")
+           .style("font-size", "13px")
+           .text("Stress"); //y axis label
+        
+        //set linegraph points
+        var lineFunc = d3.svg.line()
+                         .x(function(d) { return xRange(d.x); })
+                         .y(function(d) { return yRange(d.y); })
+                         .interpolate('linear');
+            
+        //plot linegraph points
+        svg.append('path')
+           .attr('d', lineFunc(data))
+           .attr('stroke', 'blue')
+           .attr('stroke-width', 1)
+           .attr('fill', 'none');
+        
+        //create focus ring to show mouseover
+        var focus = svg.append("g")
+                       .attr("class", "focus")
+                       .style("display", "none");
+              
+        focus.append("circle")
+             .attr("r", 4.5);
+              
+        focus.append("text")
+             .attr("x", 0)
+             .attr("y", -15)
+             .attr("dy", ".35em")
+             .attr("text-anchor", "middle");
+        
+        //cover plot area with rect for mouseover
+        svg.append("rect")
+           .attr("class", "overlay")
+           .attr("width", width)
+           .attr("height", height)
+           .on("mouseover", function() { focus.style("display", null); })
+           .on("mouseout", function() { focus.style("display", "none"); })
+           .on("mousemove", mousemove);
+            
+        //function for mouseover
+        function mousemove() {
+            //bisects mouseover between points
+            bisectData = d3.bisector(function(d) { return d.x; }).left;
+            
+            //get data corresponding to x axis location of mouse
+            var x0 = xRange.invert(d3.mouse(this)[0]),
+            i = bisectData(data, x0, 1),
+            d0 = data[i - 1],
+            d1 = data[i],
+            d = x0 - d0.x > d1.x - x0 ? d1 : d0;
+            
+            //update location of focus ring
+            focus.attr("transform", "translate(" + xRange(d.x) + "," + yRange(d.y) + ")");
+            focus.select("text").text(d.y);
+            
+            //update image depending on mouseover location
+            image.append("image")
+            .attr("xlink:href", d.pic)
+            .attr("x", width/4)
+            .attr("y", height/4)
+            .attr("width", width/2)
+            .attr("height", height/2);
+            
+        }//end mousemove
+    });//end d3.json
+</script>
