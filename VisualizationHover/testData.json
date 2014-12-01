@@ -1,0 +1,47 @@
+[
+    {
+	"points": [1,1,10],
+        "pic": "1.jpg",
+	"series": "series1" 
+    },
+    {
+	"points": [2,2,20],
+        "pic": "2.jpg",
+	"series": "series1" 
+    },
+    {
+	"points": [3,3,30],
+        "pic": "3.jpg",
+	"series": "series1" 
+    },
+    {
+	"points": [1,2,5],
+        "pic": "4.jpg",
+	"series": "series2" 
+    },
+    {
+	"points": [2,4,10],
+        "pic": "5.jpg",
+	"series": "series2" 
+    },
+    {
+	"points": [3,6,20],
+        "pic": "6.jpg",
+	"series": "series2" 
+    },
+    {
+	"points": [1,3,20],
+        "pic": "4.jpg",
+	"series": "series3" 
+    },
+    {
+	"points": [2,6,40],
+        "pic": "5.jpg",
+	"series": "series3" 
+    },
+    {
+	"points": [3,9,50],
+        "pic": "6.jpg",
+	"series": "series3" 
+    }
+]
