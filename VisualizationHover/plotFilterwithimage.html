@@ -1,0 +1,391 @@
+<!--
+CSE6242 Project Visualization
+Abhiram Kannan, David Brough, David Scripka, Allen Koh
+Georgia Tech
+Fall 2014
+ -->
+
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+.axis text {
+    font: 10px sans-serif;
+}
+
+.axis path,
+.axis line {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+}
+
+.container {
+    flex-direction: column;
+}
+
+.overlay {
+    fill: none;
+    pointer-events: all;
+}
+
+.focus circle {
+    fill: none;
+    stroke: steelblue;
+}
+
+.focus2 circle {
+    fill: none;
+    stroke: steelblue;
+}
+
+</style>
+
+<head>
+    <title>CSE6242 Project Proposal Viz</title>
+</head>
+
+<body>
+    <!--div for chart area-->
+    <div class="container" id="area1"></div>
+    <!--div for image area-->
+    <div class="container" id="area2"></div>
+</body>
+
+<script src="d3/d3.v3.min.js"></script>
+<script type="text/javascript">
+    
+    //set margins
+    var margin = {top: 20, right: 20, bottom: 70, left: 70},
+    width = 625 - margin.left - margin.right,
+    height = 400 - margin.top - margin.bottom;
+    
+    //set axis ranges
+    var xRange = d3.scale.linear().range([0, width]);
+    var yRange = d3.scale.linear().range([height, 0]);
+    
+    //area for chart
+    var svg = d3.select("#area1").append("svg")
+                .attr("width", width + margin.left + margin.right+10)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    var imgScale = 1.5
+    //area for image
+    var image = d3.select("#area2").append("svg")
+                  .attr("width", width*imgScale + margin.left + margin.right+10)
+                  .attr("height", height + margin.top + margin.bottom);
+
+    //import data from json
+    d3.json("Vis_data.json", function(error, data) {
+
+        //set x axis
+        svg.append("g")
+           .attr("class", "x axis")
+           .attr("transform", "translate(0," + height + ")")
+           .append("text")
+           .attr("class", "xAxisLabel")
+           .attr("transform","translate(" + width/2 + ",30)")
+           .attr("text-anchor", "middle")
+           .style("font-weight", "bold")
+           .style("font-size", "13px")
+        
+        //set y axis
+        svg.append("g")
+           .attr("class", "y axis")
+           .append("text")
+           .attr("class", "yAxisLabel")
+           .attr("transform","translate(-30," + height/2 + ") rotate(-90)")
+           .attr("text-anchor", "middle")
+           .style("font-weight", "bold")
+           .style("font-size", "13px")
+
+        //Get total number of series
+    	function getSeries(data) {
+		var series =  [];
+		data.forEach(function(d) { series.push(d.sample); });
+		return uniq(series);
+	}
+
+	
+	//remove duplicates (this function from https://stackoverflow.com/questions/9229645/remove-duplicates-from-javascript-array)
+	function uniq(a) {
+	    return a.sort().filter(function(item, pos) {
+		return !pos || item != a[pos - 1];
+	    })
+	}
+ 	var series = getSeries(data);
+	
+	//Create colors for line plots
+
+	var colors = ['rgb(166,206,227)','rgb(31,120,180)','rgb(178,223,138)','rgb(51,160,44)','rgb(251,154,153)','rgb(227,26,28)','rgb(253,191,111)','rgb(255,127,0)','rgb(202,178,214)','rgb(106,61,154)','rgb(255,255,153)','rgb(177,89,40)'];
+
+	//Create checkboxes to filter the plot based on the number of series
+	function addCheckboxes(series) {
+		for ( var i = 0; i < series.length; i++ ) {
+			if ( i == 0 ) {
+				d3.select("body").append("div")
+					.html("Series Selection")
+					.attr("style", "position: absolute; right: " + window.innerWidth/2 + "px; top: " + 0 +"px;")
+					.attr("id", "seriesCheckboxesTitle")
+				}
+
+			d3.select("body").append("div")
+				.html(series[i])
+				.attr("style", "position: absolute; right: " + window.innerWidth/2 + "px; top: " + (30*i+30) +"px;")
+				.attr("id", "series_checkboxes")
+				.append("input")
+					.attr("type","checkbox")
+					.attr("id", series[i])
+// 					.attr("checked", true);		//start with a default value of true
+		}
+	}
+
+	addCheckboxes(series);
+
+	//Create radio buttons to set the X and Y axis of the plot
+	function addAxisCheckBoxes(data) {
+		for ( var i = 0; i < data[0].points.length; i++ ) {
+			d3.select("body").append("div")
+				.html("PC " + i)
+				.attr("style", "position: absolute; right: " + window.innerWidth/3 + "px; top: " + (30*i+30) +"px;")
+				.attr("id", "xAxis_radioButtons")
+				.append("input")
+					.attr("type","radio")
+					.attr("id", "xPC" + i)
+					.attr("name", "xAxisRadioButtons");
+			if ( i == 0 ) {
+				d3.select("body").append("div")
+					.html("X Axis")
+					.attr("style", "position: absolute; right: " + window.innerWidth/3 + "px; top: " + (0) +"px;")
+					.attr("id", "xAxis_radioButtonsTitle");
+				d3.select("#xPC"+i).attr("checked", true);
+
+				}
+		}
+
+		for ( var i = 0; i < data[0].points.length; i++ ) {
+
+			d3.select("body").append("div")
+				.html("PC " + i)
+				.attr("style", "position: absolute; right: " + window.innerWidth/4 + "px; top: " + (30*i+30) +"px;")
+				.attr("id", "yAxis_radioButtons")
+				.append("input")
+					.attr("type","radio")
+					.attr("id", "yPC" + i)
+					.attr("name", "yAxisRadioButtons");
+			if ( i == 0 ) {
+				d3.select("body").append("div")
+					.html("Y Axis")
+					.attr("style", "position: absolute; right: " + window.innerWidth/4 + "px; top: " + (0) +"px;")
+					.attr("id", "yAxis_radioButtonsTitle")
+				d3.select("#yPC"+i).attr("checked", true);
+				}
+		}
+
+	}
+
+	addAxisCheckBoxes(data);
+
+	//Check the status of the series checkboxes and axis radiobuttons
+	function checkCheckboxes() {
+		//Check radio buttons to get axis variables
+		for ( var i = 0; i < data[0].points.length; i++ ) {
+			var currentRadioButton = d3.select("#xPC" + i)[0][0];
+			if (currentRadioButton.checked) {
+				var xAxisIndex = i;
+			}
+			var currentRadioButton = d3.select("#yPC" + i)[0][0];
+			if (currentRadioButton.checked) {
+				var yAxisIndex = i;
+			}
+		}
+// 		var boxes = d3.selectAll("#series_checkboxes");
+		for ( var i = 0; i < series.length; i++) {
+			var currentCheckbox = d3.select("#"+series[i])[0][0];
+			if (currentCheckbox.checked) {
+				if (d3.select("g").selectAll(".circles_"+series[i])[0].length != 0) {
+					d3.select("g").selectAll(".circles_"+series[i]).remove()
+				}
+				plotSeries(data, currentCheckbox.id, xAxisIndex, yAxisIndex);
+			}
+			if (!currentCheckbox.checked) {
+				d3.select("g").selectAll(".circles_"+series[i]).remove()
+			}
+		}
+
+	}
+
+	checkCheckboxes();
+
+	//Create button to update the plots
+
+	d3.select("body").append("div")
+		.attr("style", "position: absolute; right: " + window.innerWidth/6 + "px; top: " + (30) +"px;")
+		.append("input")
+			.attr("type", "button")
+			.attr("id", "updatePlotButton")
+			.attr("value", "Update Plot")
+// 			.attr("onclick", "checkCheckboxes()");
+
+	d3.select("#updatePlotButton").on("click", checkCheckboxes);
+
+	//Get data points associated with a single series
+	function getSingleSeriesData(data,seriesName) {
+		var tmp = [];
+		for ( var i = 0; i < data.length; i++ ) {
+			if (seriesName == data[i].sample) { tmp.push(data[i]); }
+		}
+		return tmp;
+	}
+
+	//plot just one series
+	function plotSeries(data, seriesName, xAxisIndex, yAxisIndex) {
+
+		//set x and y domains
+		xRange.domain([d3.min(data, function(d) { return d.points[xAxisIndex];}), d3.max(data, function(d) { return d.points[xAxisIndex];})]);
+		yRange.domain([d3.min(data, function(d) { return d.points[yAxisIndex];}), d3.max(data, function(d) { return d.points[yAxisIndex];})]);
+
+	        //set axes
+	        var xAxis = d3.svg.axis()
+	                    .scale(xRange)
+	                    .orient("bottom");
+	        var yAxis = d3.svg.axis()
+	                    .scale(yRange)
+	                    .orient("left");
+
+		//update axis
+		svg.select("g.x.axis")
+			.call(xAxis);
+		svg.select("g.y.axis")
+			.call(yAxis);
+
+		svg.select(".xAxisLabel")
+			.text("PC " + xAxisIndex);
+		svg.select(".yAxisLabel")
+			.text("PC " + yAxisIndex);
+
+		//Create circles for scatter plot
+		svg.append("g")
+		    .attr("class", "circles_"+seriesName)
+		    .selectAll("circle")
+		    .data(getSingleSeriesData(data, seriesName))
+		    .enter()
+		    .append("circle")
+		    .attr("cx", function(d) { return xRange(d.points[xAxisIndex]); } )
+		    .attr("cy", function(d) { return yRange(d.points[yAxisIndex]); } )
+		    .attr("r", 2)
+		    .attr("fill", colors[series.indexOf(seriesName)])
+		    .style("stroke", colors[series.indexOf(seriesName)])
+            .on("mouseover", mouseover)
+            .on("mouseout", function() { focus.style("display", "none"); })
+            .on("click", cloned)
+            .on("dblclick", removeCircles)
+	}
+
+//////////////////////
+// Allen's Stuff
+/////////////////////
+
+        
+    //create focus ring to show mouseover
+    var focus = svg.append("g")
+                   .attr("class", "focus")
+                   .style("display", "none");
+          
+    focus.append("circle")
+         .attr("r", 7)
+         .style("stroke", "red");
+          
+    focus.append("text")
+         .attr("x", 0)
+         .attr("y", -15)
+         .attr("dy", ".35em")
+         .attr("text-anchor", "middle");
+
+    //create overlaying rect just for double-click area
+    svg.append("rect")
+        .attr("class", "overlay")
+        .attr("width", width)
+        .attr("height", height)
+        .on("dblclick", removeCircles);
+            
+    //show focus circle and text when hovering over points
+    function mouseover(d){
+        focus.style("display", null);
+        xloc = d3.select(this).attr("cx")
+        yloc = d3.select(this).attr("cy")
+            
+        focus.attr("transform", "translate(" + xloc+ "," +yloc + ")");
+        formatVal = d3.format(".1f");
+        sample = formatVal(d.points[1]);
+        focus.select("text").text(sample);
+    }
+    
+    //keep track of num of images
+    var numPics = 0;
+            
+    //click to get image for a point
+    function cloned(d) {
+        //only allow 4 images at a time
+        if (numPics >= 4) {
+            removeCircles()
+        }
+            
+        //create static focus circle
+        focus2 = svg.append("g")
+        .attr("class", "focus2")
+        .attr("transform", focus.attr("transform"))
+        .style("display", null);
+        
+        focus2.append("circle")
+        .attr("r", 5)
+        .style("stroke", "black");
+        
+        focus2.append("text")
+        .attr("x", 0)
+        .attr("y", -15)
+        .attr("dy", ".35em")
+        .attr("text-anchor", "middle");
+        
+        //set text for static focus circle
+        formatVal = d3.format(".1f");
+        sample = formatVal(d.points[1]);
+        focus2.select("text").text(sample);
+        
+        //format location of images
+        imgXLoc = [50, imgScale*width/2+50, 50, imgScale*width/2+50];
+        imgYLoc = [25, 25, height/2+60, height/2+60];
+            
+        //descriptive text for image
+        image.append("text")
+             .attr("x", imgXLoc[numPics]+imgScale*width/3.8)
+             .attr("y", imgYLoc[numPics]-10)
+             .attr("dy", ".35em")
+             .attr("text-anchor", "middle")
+            .style("background-color", "white")
+            .text(d.sample + ", Strain: "+d.strain +", Load (kg): " + d.Load_in_Kgs);
+            console.log(d);
+
+        //show image
+        image.append("image")
+        .attr("xlink:href", "./thumbnails/"+d.pic)
+        .attr("x", imgXLoc[numPics])
+        .attr("y", imgYLoc[numPics])
+        .attr("width", imgScale*width/1.9)
+        .attr("height", height/1.9);
+            
+        numPics = numPics +1;
+    }
+            
+    //remove all static focus circles and images
+    function removeCircles() {
+        numPics = 0;
+        image.selectAll("image").remove();
+        image.selectAll("text").remove();
+        svg.selectAll("g.focus2").remove();
+    }
+        
+});//end d3.json
+</script>
