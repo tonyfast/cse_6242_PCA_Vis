@@ -1,0 +1,226 @@
+<!--
+CSE6242 Project Proposal Visualization
+Graphs a stress-strain curve and displays image
+of sample depending on location of mouseover
+ -->
+
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+.axis text {
+    font: 10px sans-serif;
+}
+
+.axis path,
+.axis line {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+}
+
+.container {
+    float: left;
+}
+
+.overlay {
+    fill: none;
+    pointer-events: all;
+}
+
+.focus circle {
+    fill: none;
+    stroke: steelblue;
+}
+
+.focus2 circle {
+    fill: none;
+    stroke: steelblue;
+}
+
+</style>
+
+<head>
+    <title>CSE6242 Project Proposal Viz</title>
+</head>
+
+<body>
+    <!--div for chart area-->
+    <div class="container" id="area1"></div>
+    <!--div for image area-->
+    <div class="container" id="area2"></div>
+</body>
+
+<script src="d3/d3.v3.min.js"></script>
+<script type="text/javascript">
+    
+    //set margins
+    var margin = {top: 20, right: 20, bottom: 70, left: 70},
+    width = 625 - margin.left - margin.right,
+    height = 400 - margin.top - margin.bottom;
+    
+    //set axis ranges
+    var xRange = d3.scale.linear().range([0, width]);
+    var yRange = d3.scale.linear().range([height, 0]);
+    
+    //set axes
+    var xAxis = d3.svg.axis()
+                .scale(xRange)
+                .orient("bottom")
+                .ticks(8);
+    var yAxis = d3.svg.axis()
+                .scale(yRange)
+                .orient("left")
+                .ticks(10);
+    
+    //area for chart
+    var svg = d3.select("#area1").append("svg")
+                .attr("width", width + margin.left + margin.right+10)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    
+    //area for image
+    var image = d3.select("#area2").append("svg")
+                  .attr("width", width + margin.left + margin.right+10)
+                  .attr("height", height + margin.top + margin.bottom)
+                  .append("g")
+                  .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    //import data from json
+    //format should be:
+    //      [{ [xvalue,
+    //         yvalue,
+    //         zvalue]
+    //      }]
+    d3.json("pc_json.json", function(error, fullData) {
+        var data = fullData.SAX_2.sort(function(a, b){ return d3.ascending(a[0], b[0]); });
+        //set x and y domains
+        xRange.domain([d3.min(data, function(d) { return d[0];}),
+                       d3.max(data, function(d) { return d[0];})+8900]);
+        yRange.domain([d3.min(data, function(d) { return d[1];})-300,
+                       d3.max(data, function(d) { return d[1];})+8050]);
+            
+        //set x axis
+        svg.append("g")
+           .attr("class", "x axis")
+           .attr("transform", "translate(0," + height + ")")
+           .call(xAxis)
+           .append("text")
+           .attr("transform","translate(" + width/2 + ",30)")
+           .attr("text-anchor", "middle")
+           .style("font-weight", "bold")
+           .style("font-size", "13px")
+           .text("PC1"); //x axis label
+        
+        //set y axis
+        svg.append("g")
+           .attr("class", "y axis")
+           .call(yAxis)
+           .append("text")
+           .attr("transform","translate(-55," + height/2 + ") rotate(-90)")
+           .attr("text-anchor", "middle")
+           .style("font-weight", "bold")
+           .style("font-size", "13px")
+           .text("PC2"); //y axis label
+            
+        svg.selectAll("circle")
+            .data(data)
+            .enter()
+            .append("circle")
+            .attr("class", "circle")
+            .attr("cx", function (d) { return xRange(d[0]); })
+            .attr("cy", function (d) { return yRange(d[1]); })
+            .attr("r", 1)
+            .attr("fill", "blue")
+            .style("stroke", "blue");
+        
+        //create focus ring to show mouseover
+        var focus = svg.append("g")
+                       .attr("class", "focus")
+                       .style("display", "none");
+              
+        focus.append("circle")
+             .attr("r", 4)
+             .style("stroke", "red");
+              
+        focus.append("text")
+             .attr("x", 0)
+             .attr("y", -15)
+             .attr("dy", ".35em")
+             .attr("text-anchor", "middle");
+        
+        //cover plot area with rect for mouseover
+        svg.append("rect")
+           .attr("class", "overlay")
+           .attr("width", width)
+           .attr("height", height)
+           .on("mouseover", function() { focus.style("display", null); })
+           .on("mouseout", function() { focus.style("display", "none"); })
+           .on("mousemove", mousemove)
+           .on("click", cloned)
+           .on("dblclick", removeCircles);
+            
+        //function for mouseover
+        function mousemove() {
+            //bisects mouseover between points
+            bisectData = d3.bisector(function(d) {return d[0]; }).left;
+            //get data corresponding to x axis location of mouse
+            var x0 = xRange.invert(d3.mouse(this)[0]);
+            i = bisectData(data, x0, 1),
+            d0 = data[i - 1],
+            d1 = data[i],
+            d = x0 - d0[0] > d1[0] - x0 ? d1 : d0;
+            
+            //update location of focus ring
+            focus.attr("transform", "translate(" + xRange(d[0]) + "," + yRange(d[1]) + ")");
+            formatVal = d3.format(".1f");
+            sample = formatVal(d[1]);
+            focus.select("text").text(sample);
+            
+            //update image depending on mouseover location
+            //image.append("image")
+            //.attr("xlink:href", d.pic)
+            //.attr("x", width/4)
+            //.attr("y", height/4)
+            //.attr("width", width/2)
+            //.attr("height", height/2);
+            
+        }//end mousemove
+            
+        function removeCircles() {
+            svg.selectAll("g.focus2").remove();
+        }
+        function cloned() {
+            focus2 = svg.append("g")
+            .attr("class", "focus2")
+            .attr("transform", focus.attr("transform"))
+            .style("display", null);
+            
+            focus2.append("circle")
+            .attr("r", 4.5)
+            .style("stroke", "black");
+            
+            focus2.append("text")
+            .attr("x", 0)
+            .attr("y", -15)
+            .attr("dy", ".35em")
+            .attr("text-anchor", "middle");
+            
+            //bisects mouseover between points
+            bisectData = d3.bisector(function(d) {return d[0]; }).left;
+            //get data corresponding to x axis location of mouse
+            var x0 = xRange.invert(d3.mouse(this)[0]);
+            i = bisectData(data, x0, 1),
+            d0 = data[i - 1],
+            d1 = data[i],
+            d = x0 - d0[0] > d1[0] - x0 ? d1 : d0;
+            
+            //update location of focus ring
+            formatVal = d3.format(".1f");
+            sample = formatVal(d[1]);
+            focus2.select("text").text(sample);
+        }
+         
+    });//end d3.json
+</script>

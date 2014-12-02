@@ -149,7 +149,7 @@ of sample depending on location of mouseover
 				.append("input")
 					.attr("type","checkbox")
 					.attr("id", series[i])
-// 					.attr("checked", true);		//start with a default value of true
+					.attr("checked", true);		//start with a default value of true
 		}
 	}
 
@@ -216,13 +216,13 @@ of sample depending on location of mouseover
 		for ( var i = 0; i < series.length; i++) {
 			var currentCheckbox = d3.select("#"+series[i])[0][0];
 			if (currentCheckbox.checked) {
-				if (d3.select("g").selectAll(".circles_"+series[i])[0].length != 0) {
-					d3.select("g").selectAll(".circles_"+series[i]).remove()
+				if (d3.select("#"+series[i]+"_plot")[0][0] != null) {
+			        	d3.select('#' + currentCheckbox.id + '_plot').remove();
 				}
 				plotSeries(data, currentCheckbox.id, xAxisIndex, yAxisIndex);
 			}
 			if (!currentCheckbox.checked) {
-				d3.select("g").selectAll(".circles_"+series[i]).remove()
+			        d3.select('#' + currentCheckbox.id + '_plot').remove();
 			}
 		}
 
@@ -253,10 +253,26 @@ of sample depending on location of mouseover
 
 	//plot just one series
 	function plotSeries(data, seriesName, xAxisIndex, yAxisIndex) {
+// 		//create linegraph points function
+// 		var lineFunc = d3.svg.line()
+// 				 .x(function(d) { return xRange(d.points[xAxisIndex]); } )
+// 				 .y(function(d) { return yRange(d.points[yAxisIndex]); } )
+// 				 .interpolate('linear');
+
+		svg.selectAll("circle")
+		    .data(getSingleSeriesData(data, seriesName))
+		    .enter()
+		    .append("circle")
+		    .attr("class", "circle")
+		    .attr("cx", function(d) { return xRange(d.points[xAxisIndex]); } )
+		    .attr("cy", function(d) { return yRange(d.points[yAxisIndex]); } )
+		    .attr("r", 1)
+		    .attr("fill", "blue")
+		    .style("stroke", "blue");
 
 		//set x and y domains
-		xRange.domain([d3.min(data, function(d) { return d.points[xAxisIndex];}), d3.max(data, function(d) { return d.points[xAxisIndex];})]);
-		yRange.domain([d3.min(data, function(d) { return d.points[yAxisIndex];}), d3.max(data, function(d) { return d.points[yAxisIndex];})]);
+		xRange.domain([0, d3.max(data, function(d) { return d.points[xAxisIndex];})]);
+		yRange.domain([0, d3.max(data, function(d) { return d.points[yAxisIndex]; })]);
 
 	        //set axes
 	        var xAxis = d3.svg.axis()
@@ -277,27 +293,22 @@ of sample depending on location of mouseover
 		svg.select(".yAxisLabel")
 			.text("PC " + yAxisIndex);
 
-		//Create circles for scatter plot
-		svg.append("g")
-		    .attr("class", "circles_"+seriesName)
-		    .selectAll("circle")
-		    .data(getSingleSeriesData(data, seriesName))
-		    .enter()
-		    .append("circle")
-		    .attr("cx", function(d) { return xRange(d.points[xAxisIndex]); } )
-		    .attr("cy", function(d) { return yRange(d.points[yAxisIndex]); } )
-		    .attr("r", 2)
-		    .attr("fill", colors[series.indexOf(seriesName)])
-		    .style("stroke", colors[series.indexOf(seriesName)]);
-
-
-
 	}
 
 //////////////////////
 // Allen's Stuff
 /////////////////////
 
+//         svg.selectAll("circle")
+//             .data(data)
+//             .enter()
+//             .append("circle")
+//             .attr("class", "circle")
+//             .attr("cx", function (d) { return xRange(d[0]); })
+//             .attr("cy", function (d) { return yRange(d[1]); })
+//             .attr("r", 1)
+//             .attr("fill", "blue")
+//             .style("stroke", "blue");
         
         //create focus ring to show mouseover
         var focus = svg.append("g")
