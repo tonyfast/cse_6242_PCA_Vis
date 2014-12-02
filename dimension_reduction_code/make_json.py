@@ -16,7 +16,18 @@ directory_property = directory + '/Data/Load_Strain_and_Crystallinity'
 def _get_pic_suffix(sample_name, time):
     zeros = '_0000'
     time_str = str(time)
-    return sample_name + zeros[:-len(time_str)] + time_str + '.png'
+    new_sample_name = _get_pic_prefix(sample_name)
+    # print new_sample_name
+    return new_sample_name + zeros[:-len(time_str)] + time_str + '.png'
+
+
+def _get_pic_prefix(sample_name):
+    if int(sample_name[-2]) == 0:
+        print sample_name[:-2]
+        return sample_name[:-2] + sample_name[-1]
+    else:
+        return sample_name
+
 
 file_names = sorted(os.listdir(directory_property))
 dict_list = []
