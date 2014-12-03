@@ -27,6 +27,7 @@ of sample depending on location of mouseover
 
 .filter {
 	float: left;
+	margin: 50px 20px 20px 0px;
 }
 
 .overlay {
@@ -53,10 +54,10 @@ of sample depending on location of mouseover
 <body>
     <!--div for PC chart area-->
     <div class="container" id="pc_chart"></div>
-    <!--div for stress/strain chart area-->
-    <div class="container" id="ss_chart"></div>
     <!--div for image area-->
     <div class="container" id="images"></div>
+    <!--div for stress/strain chart area-->
+    <div class="container" id="ss_chart"></div>
     <!--div for filter control area-->
     <div class="container" id="filters"></div>
 </body>
@@ -77,6 +78,8 @@ of sample depending on location of mouseover
     var svg = d3.select("#pc_chart").append("svg")
                 .attr("width", width + margin.left + margin.right+10)
                 .attr("height", height + margin.top + margin.bottom)
+		.style("float", "right")
+		.style("margin-right", "15%")
                 .append("g")
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
@@ -84,6 +87,8 @@ of sample depending on location of mouseover
     var ssChart = d3.select("#ss_chart").append("svg")
                 .attr("width", width + margin.left + margin.right+10)
                 .attr("height", height + margin.top + margin.bottom)
+		.style("float", "right")
+		.style("margin-right", "15%")
                 .append("g")
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
     
@@ -172,30 +177,42 @@ of sample depending on location of mouseover
 	
 	//Create colors for line plots
 
-	var colors = ['rgb(166,206,227)','rgb(31,120,180)','rgb(178,223,138)','rgb(51,160,44)','rgb(251,154,153)','rgb(227,26,28)','rgb(253,191,111)','rgb(255,127,0)','rgb(202,178,214)','rgb(106,61,154)','rgb(255,255,153)','rgb(177,89,40)'];
-
+// 	var colors = ['rgb(166,206,227)','rgb(31,120,180)','rgb(178,223,138)','rgb(51,160,44)','rgb(251,154,153)','rgb(227,26,28)','rgb(253,191,111)','rgb(255,127,0)','rgb(202,178,214)','rgb(106,61,154)','rgb(255,255,153)','rgb(177,89,40)'];
+	var colors = ['#a6cee3',"#1f78b4","#b2df8a","#33a02c","#fb9a99","#e31a1c","#fdbf6f","#ff7f00","#cab2d6","#6a3d9a","#ffff99","#b15928"];
 	//Create checkboxes to filter the plot based on the number of series
 	function addCheckboxes(series) {
-		var checkboxGroup = d3.select('#filters').append("g").attr("class", "filter");
+		var checkboxGroup = d3.select('#filters').append("g").attr("class", "filter")
+			.style("float", "left")
+			.style("margin-left", "20%");
 
 		for ( var i = 0; i < series.length; i++ ) {
 			if ( i == 0 ) {
 // 				d3.select("#filters").append("div")
 				checkboxGroup.append("div")
-					.html("Series Selection")
+					.html("<b>Series Selection</b>")
 // 					.attr("style", "position: absolute; right: " + window.innerWidth/2 + "px; top: " + 0 +"px;")
 					.attr("id", "seriesCheckboxesTitle")
+			
 				}
 
 // 			d3.select("#filters").append("div")
-				checkboxGroup.append("div")
-				.html(series[i])
-// 				.attr("style", "position: absolute; right: " + window.innerWidth/2 + "px; top: " + (30*i+30) +"px;")
-				.attr("id", "series_checkboxes")
-				.append("input")
-					.attr("type","checkbox")
-					.attr("id", series[i])
-// 					.attr("checked", true);		//start with a default value of true
+				var currentBox = checkboxGroup.append("div");
+
+				currentBox.html(series[i])
+	// 				.attr("style", "position: absolute; right: " + window.innerWidth/2 + "px; top: " + (30*i+30) +"px;")
+					.attr("id", "series_checkboxes")
+					.append("input")
+						.attr("type","checkbox")
+						.attr("id", series[i])
+						.attr("checked", true);		//start with a default value of true
+
+				currentBox.append("svg")
+					.attr("width", "12px")
+					.attr("height", "12px")
+					.append("rect")
+					.attr("width", "12px")
+					.attr("height", "12px")
+					.style("fill", colors[i]);
 		}
 	}
 
@@ -210,7 +227,7 @@ of sample depending on location of mouseover
 			if ( i == 0 ) {
 // 				d3.select("#filters").append("div")
 				radioButtonGroupX.append("div")
-					.html("X Axis")
+					.html("<b>X Axis</b>")
 // 					.attr("style", "position: absolute; right: " + window.innerWidth/3 + "px; top: " + (0) +"px;")
 					.attr("id", "xAxis_radioButtonsTitle");
 				d3.select("#xPC"+i).attr("checked", true);
@@ -226,6 +243,10 @@ of sample depending on location of mouseover
 					.attr("type","radio")
 					.attr("id", "xPC" + i)
 					.attr("name", "xAxisRadioButtons");
+
+			if ( i == 0 ) {
+				d3.select("#xPC"+i).attr("checked", true);
+				}
 		}
 
 		for ( var i = 0; i < data[0].points.length; i++ ) {
@@ -233,7 +254,7 @@ of sample depending on location of mouseover
 			if ( i == 0 ) {
 // 				d3.select("#filters").append("div")
 				radioButtonGroupY.append("div")
-					.html("Y Axis")
+					.html("<b>Y Axis</b>")
 // 					.attr("style", "position: absolute; right: " + window.innerWidth/4 + "px; top: " + (0) +"px;")
 					.attr("id", "yAxis_radioButtonsTitle")
 				d3.select("#yPC"+i).attr("checked", true);
@@ -248,6 +269,9 @@ of sample depending on location of mouseover
 					.attr("type","radio")
 					.attr("id", "yPC" + i)
 					.attr("name", "yAxisRadioButtons");
+			if ( i == 1 ) {
+				d3.select("#yPC"+i).attr("checked", true);
+				}
 		}
 
 	}
@@ -282,10 +306,11 @@ of sample depending on location of mouseover
 				d3.select("#ss_chart").selectAll(".circles_ss_"+series[i]).remove()
 			}
 		}
+		//Clear selected data points
+		removeCircles();
 
 	}
 
-	checkCheckboxes();
 
 	//Create button to update the plots
 
@@ -546,7 +571,12 @@ of sample depending on location of mouseover
         image.selectAll("image").remove();
         image.selectAll("text").remove();
         svg.selectAll("g.focus2").remove();
+        ssChart.selectAll("g.focus3").remove();
     }
         
+
+
+checkCheckboxes();
+
 });//end d3.json
 </script>
