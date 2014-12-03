@@ -20,7 +20,13 @@ of sample depending on location of mouseover
 }
 
 .container {
-    float: left;
+	width: 50%;
+	height: 50%;
+	float: left;
+}
+
+.filter {
+	float: left;
 }
 
 .overlay {
@@ -45,10 +51,14 @@ of sample depending on location of mouseover
 </head>
 
 <body>
-    <!--div for chart area-->
-    <div class="container" id="area1"></div>
+    <!--div for PC chart area-->
+    <div class="container" id="pc_chart"></div>
+    <!--div for stress/strain chart area-->
+    <div class="container" id="ss_chart"></div>
     <!--div for image area-->
-    <div class="container" id="area2"></div>
+    <div class="container" id="images"></div>
+    <!--div for filter control area-->
+    <div class="container" id="filters"></div>
 </body>
 
 <script src="d3/d3.v3.min.js"></script>
@@ -63,15 +73,22 @@ of sample depending on location of mouseover
     var xRange = d3.scale.linear().range([0, width]);
     var yRange = d3.scale.linear().range([height, 0]);
     
-    //area for chart
-    var svg = d3.select("#area1").append("svg")
+    //area for PC chart
+    var svg = d3.select("#pc_chart").append("svg")
+                .attr("width", width + margin.left + margin.right+10)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    //area for stress/strain chart
+    var ssChart = d3.select("#ss_chart").append("svg")
                 .attr("width", width + margin.left + margin.right+10)
                 .attr("height", height + margin.top + margin.bottom)
                 .append("g")
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
     
     //area for image
-    var image = d3.select("#area2").append("svg")
+    var image = d3.select("#images").append("svg")
                   .attr("width", width + margin.left + margin.right+10)
                   .attr("height", height + margin.top + margin.bottom)
                   .append("g")
@@ -111,6 +128,31 @@ of sample depending on location of mouseover
            .style("font-size", "13px")
 //            .text("Stress"); //y axis label
 
+        //set x axis for stress/strain curve
+        ssChart.append("g")
+           .attr("class", "x axis")
+           .attr("transform", "translate(0," + height + ")")
+//            .call(xAxis)
+           .append("text")
+	   .attr("class", "xAxisLabel")
+           .attr("transform","translate(" + width/2 + ",30)")
+           .attr("text-anchor", "middle")
+           .style("font-weight", "bold")
+           .style("font-size", "13px")
+//            .text("Strain"); //x axis label
+        
+        //set y axis for stress/strain curve
+        ssChart.append("g")
+           .attr("class", "y axis")
+//            .call(yAxis)
+           .append("text")
+	   .attr("class", "yAxisLabel")
+           .attr("transform","translate(-30," + height/2 + ") rotate(-90)")
+           .attr("text-anchor", "middle")
+           .style("font-weight", "bold")
+           .style("font-size", "13px")
+//            .text("Stress"); //y axis label
+
 
         //Get total number of series
     	function getSeries(data) {
@@ -134,17 +176,21 @@ of sample depending on location of mouseover
 
 	//Create checkboxes to filter the plot based on the number of series
 	function addCheckboxes(series) {
+		var checkboxGroup = d3.select('#filters').append("g").attr("class", "filter");
+
 		for ( var i = 0; i < series.length; i++ ) {
 			if ( i == 0 ) {
-				d3.select("body").append("div")
+// 				d3.select("#filters").append("div")
+				checkboxGroup.append("div")
 					.html("Series Selection")
-					.attr("style", "position: absolute; right: " + window.innerWidth/2 + "px; top: " + 0 +"px;")
+// 					.attr("style", "position: absolute; right: " + window.innerWidth/2 + "px; top: " + 0 +"px;")
 					.attr("id", "seriesCheckboxesTitle")
 				}
 
-			d3.select("body").append("div")
+// 			d3.select("#filters").append("div")
+				checkboxGroup.append("div")
 				.html(series[i])
-				.attr("style", "position: absolute; right: " + window.innerWidth/2 + "px; top: " + (30*i+30) +"px;")
+// 				.attr("style", "position: absolute; right: " + window.innerWidth/2 + "px; top: " + (30*i+30) +"px;")
 				.attr("id", "series_checkboxes")
 				.append("input")
 					.attr("type","checkbox")
@@ -157,42 +203,51 @@ of sample depending on location of mouseover
 
 	//Create radio buttons to set the X and Y axis of the plot
 	function addAxisCheckBoxes(data) {
+		var radioButtonGroupX = d3.select('#filters').append("g").attr("class", "filter");
+		var radioButtonGroupY = d3.select('#filters').append("g").attr("class", "filter");
+
 		for ( var i = 0; i < data[0].points.length; i++ ) {
-			d3.select("body").append("div")
+			if ( i == 0 ) {
+// 				d3.select("#filters").append("div")
+				radioButtonGroupX.append("div")
+					.html("X Axis")
+// 					.attr("style", "position: absolute; right: " + window.innerWidth/3 + "px; top: " + (0) +"px;")
+					.attr("id", "xAxis_radioButtonsTitle");
+				d3.select("#xPC"+i).attr("checked", true);
+
+				}
+
+// 			d3.select("#filters").append("div")
+				radioButtonGroupX.append("div")
 				.html("PC " + i)
-				.attr("style", "position: absolute; right: " + window.innerWidth/3 + "px; top: " + (30*i+30) +"px;")
+// 				.attr("style", "position: absolute; right: " + window.innerWidth/3 + "px; top: " + (30*i+30) +"px;")
 				.attr("id", "xAxis_radioButtons")
 				.append("input")
 					.attr("type","radio")
 					.attr("id", "xPC" + i)
 					.attr("name", "xAxisRadioButtons");
-			if ( i == 0 ) {
-				d3.select("body").append("div")
-					.html("X Axis")
-					.attr("style", "position: absolute; right: " + window.innerWidth/3 + "px; top: " + (0) +"px;")
-					.attr("id", "xAxis_radioButtonsTitle");
-				d3.select("#xPC"+i).attr("checked", true);
-
-				}
 		}
 
 		for ( var i = 0; i < data[0].points.length; i++ ) {
 
-			d3.select("body").append("div")
+			if ( i == 0 ) {
+// 				d3.select("#filters").append("div")
+				radioButtonGroupY.append("div")
+					.html("Y Axis")
+// 					.attr("style", "position: absolute; right: " + window.innerWidth/4 + "px; top: " + (0) +"px;")
+					.attr("id", "yAxis_radioButtonsTitle")
+				d3.select("#yPC"+i).attr("checked", true);
+				}
+
+// 			d3.select("#filters").append("div")
+				radioButtonGroupY.append("div")
 				.html("PC " + i)
-				.attr("style", "position: absolute; right: " + window.innerWidth/4 + "px; top: " + (30*i+30) +"px;")
+// 				.attr("style", "position: absolute; right: " + window.innerWidth/4 + "px; top: " + (30*i+30) +"px;")
 				.attr("id", "yAxis_radioButtons")
 				.append("input")
 					.attr("type","radio")
 					.attr("id", "yPC" + i)
 					.attr("name", "yAxisRadioButtons");
-			if ( i == 0 ) {
-				d3.select("body").append("div")
-					.html("Y Axis")
-					.attr("style", "position: absolute; right: " + window.innerWidth/4 + "px; top: " + (0) +"px;")
-					.attr("id", "yAxis_radioButtonsTitle")
-				d3.select("#yPC"+i).attr("checked", true);
-				}
 		}
 
 	}
@@ -218,11 +273,13 @@ of sample depending on location of mouseover
 			if (currentCheckbox.checked) {
 				if (d3.select("g").selectAll(".circles_"+series[i])[0].length != 0) {
 					d3.select("g").selectAll(".circles_"+series[i]).remove()
+					d3.select("#ss_chart").selectAll(".circles_ss_"+series[i]).remove()
 				}
 				plotSeries(data, currentCheckbox.id, xAxisIndex, yAxisIndex);
 			}
 			if (!currentCheckbox.checked) {
 				d3.select("g").selectAll(".circles_"+series[i]).remove()
+				d3.select("#ss_chart").selectAll(".circles_ss_"+series[i]).remove()
 			}
 		}
 
@@ -232,8 +289,9 @@ of sample depending on location of mouseover
 
 	//Create button to update the plots
 
-	d3.select("body").append("div")
-		.attr("style", "position: absolute; right: " + window.innerWidth/6 + "px; top: " + (30) +"px;")
+	d3.select("#filters").append("div")
+// 		.attr("style", "position: absolute; right: " + window.innerWidth/6 + "px; top: " + (30) +"px;")
+		.attr("class", "filter")
 		.append("input")
 			.attr("type", "button")
 			.attr("id", "updatePlotButton")
@@ -277,7 +335,7 @@ of sample depending on location of mouseover
 		svg.select(".yAxisLabel")
 			.text("PC " + yAxisIndex);
 
-		//Create circles for scatter plot
+		//Create circles for PC scatter plot
 		svg.append("g")
 		    .attr("class", "circles_"+seriesName)
 		    .selectAll("circle")
@@ -288,105 +346,150 @@ of sample depending on location of mouseover
 		    .attr("cy", function(d) { return yRange(d.points[yAxisIndex]); } )
 		    .attr("r", 2)
 		    .attr("fill", colors[series.indexOf(seriesName)])
+		    .style("stroke", colors[series.indexOf(seriesName)])
+		    .on("mouseover", mouseover)
+		    .on("mouseout", function() { focus.style("display", "none"); })
+		    .on("click", cloned)
+		    .on("dblclick", removeCircles);
+
+		//Plot stress/strain curve
+
+		xRange.domain([0, d3.max(data, function(d) { return d.strain ;})]);
+		yRange.domain([0, d3.max(data, function(d) { return d.Load_in_Kgs ;})]);	//some of the data here is negative?
+
+	        var xAxis = d3.svg.axis()
+	                    .scale(xRange)
+	                    .orient("bottom");
+	        var yAxis = d3.svg.axis()
+	                    .scale(yRange)
+	                    .orient("left");
+
+		ssChart.select("g.x.axis")
+			.call(xAxis);
+		ssChart.select("g.y.axis")
+			.call(yAxis);
+
+		ssChart.select(".xAxisLabel")
+			.text("Strain");
+		ssChart.select(".yAxisLabel")
+			.text("Load (kg)");
+
+		ssChart.append("g")
+		    .attr("class", "circles_ss_"+seriesName)
+		    .selectAll("circle")
+		    .data(getSingleSeriesData(data, seriesName))
+		    .enter()
+		    .append("circle")
+		    .attr("cx", function(d) { return xRange(d.strain); } )
+		    .attr("cy", function(d) { return yRange(d.Load_in_Kgs); } )
+		    .attr("r", 2)
+		    .attr("fill", colors[series.indexOf(seriesName)])
 		    .style("stroke", colors[series.indexOf(seriesName)]);
-
-
 
 	}
 
 //////////////////////
-// Allen's Stuff
+// Allens Stuff
 /////////////////////
 
+  //create focus ring to show mouseover
+    var focus = svg.append("g")
+                   .attr("class", "focus")
+                   .style("display", "none");
+          
+    focus.append("circle")
+         .attr("r", 7)
+         .style("stroke", "red");
+          
+    focus.append("text")
+         .attr("x", 0)
+         .attr("y", -15)
+         .attr("dy", ".35em")
+         .attr("text-anchor", "middle");
+
+    //create overlaying rect just for double-click area
+    svg.append("rect")
+        .attr("class", "overlay")
+        .attr("width", width)
+        .attr("height", height)
+        .on("dblclick", removeCircles);
+            
+    //show focus circle and text when hovering over points
+    function mouseover(d){
+        focus.style("display", null);
+        xloc = d3.select(this).attr("cx")
+        yloc = d3.select(this).attr("cy")
+            
+        focus.attr("transform", "translate(" + xloc+ "," +yloc + ")");
+        formatVal = d3.format(".1f");
+        sample = formatVal(d.points[1]);
+        focus.select("text").text(sample);
+    }
+    
+    //keep track of num of images
+    var numPics = 0;
+            
+    //click to get image for a point
+    function cloned(d) {
+        //only allow 4 images at a time
+        if (numPics >= 4) {
+            removeCircles()
+        }
+            
+        //create static focus circle
+        focus2 = svg.append("g")
+        .attr("class", "focus2")
+        .attr("transform", focus.attr("transform"))
+        .style("display", null);
         
-        //create focus ring to show mouseover
-        var focus = svg.append("g")
-                       .attr("class", "focus")
-                       .style("display", "none");
-              
-        focus.append("circle")
-             .attr("r", 4)
-             .style("stroke", "red");
-              
-        focus.append("text")
-             .attr("x", 0)
-             .attr("y", -15)
+        focus2.append("circle")
+        .attr("r", 5)
+        .style("stroke", "black");
+        
+        focus2.append("text")
+        .attr("x", 0)
+        .attr("y", -15)
+        .attr("dy", ".35em")
+        .attr("text-anchor", "middle");
+        
+        //set text for static focus circle
+        formatVal = d3.format(".1f");
+        sample = formatVal(d.points[1]);
+        focus2.select("text").text(sample);
+        
+        //format location of images
+	var imgScale = 1.5;
+       imgXLoc = [50, imgScale*width/2+50, 50, imgScale*width/2+50];
+        imgYLoc = [25, 25, height/2+60, height/2+60];
+            
+        //descriptive text for image
+        image.append("text")
+             .attr("x", imgXLoc[numPics]+imgScale*width/3.8)
+             .attr("y", imgYLoc[numPics]-10)
              .attr("dy", ".35em")
-             .attr("text-anchor", "middle");
-        
-        //cover plot area with rect for mouseover
-        svg.append("rect")
-           .attr("class", "overlay")
-           .attr("width", width)
-           .attr("height", height)
-           .on("mouseover", function() { focus.style("display", null); })
-           .on("mouseout", function() { focus.style("display", "none"); })
-           .on("mousemove", mousemove)
-           .on("click", cloned)
-           .on("dblclick", removeCircles);
-            
-        //function for mouseover
-        function mousemove() {
-            //bisects mouseover between points
-            bisectData = d3.bisector(function(d) {return d[0]; }).left;
-            //get data corresponding to x axis location of mouse
-            var x0 = xRange.invert(d3.mouse(this)[0]);
-            i = bisectData(data, x0, 1),
-            d0 = data[i - 1],
-            d1 = data[i],
-            d = x0 - d0[0] > d1[0] - x0 ? d1 : d0;
-            
-            //update location of focus ring
-            focus.attr("transform", "translate(" + xRange(d[0]) + "," + yRange(d[1]) + ")");
-            formatVal = d3.format(".1f");
-            sample = formatVal(d[1]);
-            focus.select("text").text(sample);
-            
-            //update image depending on mouseover location
-            //image.append("image")
-            //.attr("xlink:href", d.pic)
-            //.attr("x", width/4)
-            //.attr("y", height/4)
-            //.attr("width", width/2)
-            //.attr("height", height/2);
-            
-        }//end mousemove
-            
-        function removeCircles() {
-            svg.selectAll("g.focus2").remove();
-        }
-        function cloned() {
-            focus2 = svg.append("g")
-            .attr("class", "focus2")
-            .attr("transform", focus.attr("transform"))
-            .style("display", null);
-            
-            focus2.append("circle")
-            .attr("r", 4.5)
-            .style("stroke", "black");
-            
-            focus2.append("text")
-            .attr("x", 0)
-            .attr("y", -15)
-            .attr("dy", ".35em")
-            .attr("text-anchor", "middle");
-            
-            //bisects mouseover between points
-            bisectData = d3.bisector(function(d) {return d[0]; }).left;
-            //get data corresponding to x axis location of mouse
-            var x0 = xRange.invert(d3.mouse(this)[0]);
-            i = bisectData(data, x0, 1),
-            d0 = data[i - 1],
-            d1 = data[i],
-            d = x0 - d0[0] > d1[0] - x0 ? d1 : d0;
-            
-            //update location of focus ring
-            formatVal = d3.format(".1f");
-            sample = formatVal(d[1]);
-            focus2.select("text").text(sample);
-        }
+             .attr("text-anchor", "middle")
+            .style("background-color", "white")
+            .text(d.sample + ", Strain: "+d.strain +", Load (kg): " + d.Load_in_Kgs);
+            console.log(d);
 
-
+        //show image
+        image.append("image")
+        .attr("xlink:href", "./thumbnails/"+d.pic)
+        .attr("x", imgXLoc[numPics])
+        .attr("y", imgYLoc[numPics])
+        .attr("width", imgScale*width/1.9)
+        .attr("height", height/1.9);
+            
+        numPics = numPics +1;
+    }
+            
+    //remove all static focus circles and images
+    function removeCircles() {
+        numPics = 0;
+        image.selectAll("image").remove();
+        image.selectAll("text").remove();
+        svg.selectAll("g.focus2").remove();
+    }
         
-    });//end d3.json
+});//end d3.json
 </script>
