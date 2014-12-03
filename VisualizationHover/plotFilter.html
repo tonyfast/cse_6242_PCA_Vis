@@ -50,31 +50,34 @@ Fall 2014
 
 <head>
     <title>CSE6242 Project Proposal Viz</title>
+    <script src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
 </head>
 
 <body>
     <!--div for PC chart area-->
     <div class="container" id="pc_chart"></div>
     <!--div for image area-->
-    <div class="container" id="images"></div>
     <!--div for stress/strain chart area-->
     <div class="container" id="ss_chart"></div>
     <!--div for filter control area-->
     <div class="container" id="filters"></div>
+    <div class="container">
+      <img id="image" src=""></img>
+    </div>
 </body>
 
 <script src="d3/d3.v3.min.js"></script>
 <script type="text/javascript">
-    
+
     //set margins
     var margin = {top: 20, right: 20, bottom: 70, left: 70},
     width = 625 - margin.left - margin.right,
     height = 400 - margin.top - margin.bottom;
-    
+
     //set axis ranges
     var xRange = d3.scale.linear().range([0, width]);
     var yRange = d3.scale.linear().range([height, 0]);
-    
+
     //area for PC chart
     var svg = d3.select("#pc_chart").append("svg")
                 .attr("width", width + margin.left + margin.right+10)
@@ -92,7 +95,7 @@ Fall 2014
                     .style("margin-right", "15%")
                     .append("g")
                     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-    
+
     //area for image
     var image = d3.select("#images").append("svg")
                   .attr("width", width + margin.left + margin.right+10)
@@ -101,7 +104,7 @@ Fall 2014
                   .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     //import data from json
-    d3.json("Vis_data.json", function(error, data) {
+    d3.json("Vis_data2.json", function(error, data) {
 
         //set x axis for PC chart
         svg.append("g")
@@ -113,7 +116,7 @@ Fall 2014
            .attr("text-anchor", "middle")
            .style("font-weight", "bold")
            .style("font-size", "13px")
-        
+
         //set y axis for PC chart
         svg.append("g")
            .attr("class", "y axis")
@@ -134,7 +137,7 @@ Fall 2014
                .attr("text-anchor", "middle")
                .style("font-weight", "bold")
                .style("font-size", "13px")
-        
+
         //set y axis for stress/strain chart
         ssChart.append("g")
                .attr("class", "y axis")
@@ -151,19 +154,19 @@ Fall 2014
             data.forEach(function(d) { series.push(d.sample); });
             return uniq(series);
         }
-	
+
         //remove duplicates (this function from https://stackoverflow.com/questions/9229645/remove-duplicates-from-javascript-array)
         function uniq(a) {
             return a.sort().filter(function(item, pos) {
                 return !pos || item != a[pos - 1];
             })
         }
-            
+
         var series = getSeries(data);
-	
+
         //Create colors for plots
         var colors = ["#a6cee3","#1f78b4","#b2df8a","#33a02c","#fb9a99","#e31a1c","#fdbf6f","#ff7f00","#cab2d6","#6a3d9a","#ffff99","#b15928"];
-            
+
         //Create checkboxes to filter the plot based on the number of series
         function addCheckboxes(series) {
             var checkboxGroup = d3.select('#filters').append("g")
@@ -209,7 +212,7 @@ Fall 2014
                     radioButtonGroupX.append("div")
                                      .html("<b>X Axis</b>")
                                      .attr("id", "xAxis_radioButtonsTitle");
-            
+
                     d3.select("#xPC"+i).attr("checked", true);
 
                 }
@@ -233,7 +236,7 @@ Fall 2014
                     radioButtonGroupY.append("div")
                                      .html("<b>Y Axis</b>")
                                      .attr("id", "yAxis_radioButtonsTitle")
-            
+
                     d3.select("#yPC"+i).attr("checked", true);
                 }
 
@@ -385,33 +388,33 @@ Fall 2014
         var ssFocus = ssChart.append("g")
                              .attr("class", "focus")
                              .style("display", "none");
-                
+
         ssFocus.append("circle")
                .attr("r", 7)
                .style("stroke", "black");
-                
+
         var pcFocus = svg.append("g")
                          .attr("class", "focus")
                          .style("display", "none");
-        
+
         pcFocus.append("circle")
                .attr("r", 7)
                .style("stroke", "black");
-            
+
         pcFocus.append("text")
                .attr("class", "load")
                .attr("x", 0)
                .attr("y", -20)
                .attr("dy", ".35em")
                .attr("text-anchor", "middle");
-            
+
         pcFocus.append("text")
                .attr("class", "strain")
                .attr("x", 0)
                .attr("y", -35)
                .attr("dy", ".35em")
                .attr("text-anchor", "middle");
-            
+
         pcFocus.append("text")
                .attr("class", "sample")
                .attr("x", 0)
@@ -425,20 +428,20 @@ Fall 2014
            .attr("width", width)
            .attr("height", height)
            .on("dblclick", removeCircles);
-                
+
         //show focus circle and text when hovering over points
         function mouseover(d){
             ssFocus.style("display", null);
             pcFocus.style("display", null);
-                
+
             xloc = d3.select(this).attr("cx")
             yloc = d3.select(this).attr("cy")
             ssXloc = xRange(d.strain)
             ssYloc = yRange(d.Load_in_Kgs)
-                
+
             ssFocus.attr("transform", "translate(" + ssXloc+ "," +ssYloc + ")");
             pcFocus.attr("transform", "translate(" + xloc+ "," +yloc + ")");
-            
+
             formatVal = d3.format(".2f");
             strain = "Strain: "+formatVal(d.strain);
             load = "Load(kg): "+formatVal(d.Load_in_Kgs);
@@ -446,23 +449,26 @@ Fall 2014
             pcFocus.select(".strain").text(strain).style("fontsize", "8px");;
             pcFocus.select(".sample").text(d.sample).style("fontsize", "8px");;
         }
-                
+
         //keep track of num of images
         var numPics = 0;
-                
+
         //click to get image for a point
         function cloned(d) {
+
+            ChangeImageSource(d.pic)
+            /**
             //only allow 4 images at a time
             if (numPics >= 4) {
                 removeCircles()
             }
-                
+
             //create static focus circle
             pcFocusClone = svg.append("g")
                               .attr("class", "focusClone")
                               .attr("transform", pcFocus.attr("transform"))
                               .style("display", null);
-            
+
             pcFocusClone.append("circle")
                         .attr("r", 5)
                         .style("stroke", "black");
@@ -476,36 +482,38 @@ Fall 2014
 
             //set text for static focus circle
             pcFocusClone.select(".load").text(numPics+1)
-                
+
             ssXloc = xRange(d.strain)
             ssYloc = yRange(d.Load_in_Kgs)
-            
+
+
+
             ssFocusClone = ssChart.append("g")
                                   .attr("class", "focusClone")
                                   .attr("transform", "translate(" + ssXloc+ "," + ssYloc + ")")
                                   .style("display", null);
-            
+
             ssFocusClone.append("circle")
                         .attr("r", 5)
                         .style("stroke", "black")
                         .style("fill", "none");
-            
+
             ssFocusClone.append("text")
                         .attr("class", "load")
                         .attr("x", 0)
                         .attr("y", -20)
                         .attr("dy", ".35em")
                         .attr("text-anchor", "middle");
-            
+
             ssFocusClone.select(".load").text(numPics+1)
 
             //format location of images
             var imgScale = 0.5;
             imgXLoc = [-10, imgScale*width+30, -10, imgScale*width+30];
             imgYLoc = [25, 25, imgScale*height+60, imgScale*height+60];
-            
+
             formatVal = d3.format(".2f");
-            
+
             //descriptive text for image
             image.append("text")
                  .attr("x", imgXLoc[numPics]+imgScale*width/2)
@@ -523,10 +531,11 @@ Fall 2014
                  .attr("y", imgYLoc[numPics])
                  .attr("width", imgScale*width)
                  .attr("height", imgScale*height);
-                
+
             numPics = numPics +1;
+            **/
         }
-                
+
         //remove all static focus circles and images
         function removeCircles() {
             numPics = 0;
@@ -535,8 +544,12 @@ Fall 2014
             svg.selectAll("g.focusClone").remove();
             ssChart.selectAll("g.focusClone").remove();
         }
-            
+
         checkCheckboxes();
+
+        function ChangeImageSource( src ){
+           document.getElementById("image").src = "/VisualizationHover/img/" + src
+        }
 
     });//end d3.json
 </script>
