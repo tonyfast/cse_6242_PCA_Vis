@@ -348,7 +348,7 @@ of sample depending on location of mouseover
 		    .attr("fill", colors[series.indexOf(seriesName)])
 		    .style("stroke", colors[series.indexOf(seriesName)])
 		    .on("mouseover", mouseover)
-		    .on("mouseout", function() { focus.style("display", "none"); })
+            .on("mouseout", function() { focus.style("display", "none"); focus4.style("display", "none"); })
 		    .on("click", cloned)
 		    .on("dblclick", removeCircles);
 
@@ -393,19 +393,42 @@ of sample depending on location of mouseover
 /////////////////////
 
   //create focus ring to show mouseover
-    var focus = svg.append("g")
+    var focus = ssChart.append("g")
                    .attr("class", "focus")
                    .style("display", "none");
-          
+            
     focus.append("circle")
-         .attr("r", 7)
-         .style("stroke", "red");
-          
-    focus.append("text")
-         .attr("x", 0)
-         .attr("y", -15)
-         .attr("dy", ".35em")
-         .attr("text-anchor", "middle");
+        .attr("r", 7)
+        .style("stroke", "red");
+            
+    var focus4 = svg.append("g")
+        .attr("class", "focus")
+        .style("display", "none");
+    
+    focus4.append("circle")
+        .attr("r", 7)
+        .style("stroke", "red");
+        
+    focus4.append("text")
+        .attr("class", "load")
+        .attr("x", 0)
+        .attr("y", -20)
+        .attr("dy", ".35em")
+        .attr("text-anchor", "middle");
+        
+    focus4.append("text")
+        .attr("class", "strain")
+        .attr("x", 0)
+        .attr("y", -35)
+        .attr("dy", ".35em")
+        .attr("text-anchor", "middle");
+        
+    focus4.append("text")
+        .attr("class", "sample")
+        .attr("x", 0)
+        .attr("y", -50)
+        .attr("dy", ".35em")
+        .attr("text-anchor", "middle");
 
     //create overlaying rect just for double-click area
     svg.append("rect")
@@ -417,15 +440,25 @@ of sample depending on location of mouseover
     //show focus circle and text when hovering over points
     function mouseover(d){
         focus.style("display", null);
+        focus4.style("display", null);
+            
         xloc = d3.select(this).attr("cx")
         yloc = d3.select(this).attr("cy")
+        ssXloc = xRange(d.strain)
+        ssYloc = yRange(d.Load_in_Kgs)
             
-        focus.attr("transform", "translate(" + xloc+ "," +yloc + ")");
-        formatVal = d3.format(".1f");
-        sample = formatVal(d.points[1]);
-        focus.select("text").text(sample);
+        focus.attr("transform", "translate(" + ssXloc+ "," +ssYloc + ")");
+        focus4.attr("transform", "translate(" + xloc+ "," +yloc + ")");
+        
+        formatVal = d3.format(".2f");
+        strain = "Strain: "+formatVal(d.strain);
+        load = "Load(kg): "+formatVal(d.Load_in_Kgs);
+        focus4.select(".load").text(load).style("fontsize", "8px");
+        focus4.select(".strain").text(strain).style("fontsize", "8px");;
+        focus4.select(".sample").text(d.sample).style("fontsize", "8px");;
     }
-    
+            
+            
     //keep track of num of images
     var numPics = 0;
             
@@ -439,46 +472,70 @@ of sample depending on location of mouseover
         //create static focus circle
         focus2 = svg.append("g")
         .attr("class", "focus2")
-        .attr("transform", focus.attr("transform"))
+        .attr("transform", focus4.attr("transform"))
         .style("display", null);
         
         focus2.append("circle")
-        .attr("r", 5)
-        .style("stroke", "black");
-        
+            .attr("r", 5)
+            .style("stroke", "black");
+
         focus2.append("text")
-        .attr("x", 0)
-        .attr("y", -15)
-        .attr("dy", ".35em")
-        .attr("text-anchor", "middle");
-        
+            .attr("class", "load")
+            .attr("x", 0)
+            .attr("y", -20)
+            .attr("dy", ".35em")
+            .attr("text-anchor", "middle");
+
         //set text for static focus circle
-        formatVal = d3.format(".1f");
-        sample = formatVal(d.points[1]);
-        focus2.select("text").text(sample);
-        
-        //format location of images
-	var imgScale = 1.5;
-       imgXLoc = [50, imgScale*width/2+50, 50, imgScale*width/2+50];
-        imgYLoc = [25, 25, height/2+60, height/2+60];
+        //strain = "Strain: "+formatVal(d.strain);
+        //load = "Load(kg): "+formatVal(d.Load_in_Kgs);
+        focus2.select(".load").text(numPics+1)
             
+        ssXloc = xRange(d.strain)
+        ssYloc = yRange(d.Load_in_Kgs)
+        
+        focus3 = ssChart.append("g")
+            .attr("class", "focus3")
+            .attr("transform", "translate(" + ssXloc+ "," + ssYloc + ")")
+            .style("display", null);
+            
+        focus3.append("circle")
+            .attr("r", 5)
+            .style("stroke", "black")
+            .style("fill", "none");
+            
+        focus3.append("text")
+            .attr("class", "load")
+            .attr("x", 0)
+            .attr("y", -20)
+            .attr("dy", ".35em")
+            .attr("text-anchor", "middle");
+            
+        focus3.select(".load").text(numPics+1)
+
+        //format location of images
+        var imgScale = 0.5;
+        imgXLoc = [-10, imgScale*width+30, -10, imgScale*width+30];
+        imgYLoc = [25, 25, imgScale*height+60, imgScale*height+60];
+        
+        formatVal = d3.format(".2f");
         //descriptive text for image
         image.append("text")
-             .attr("x", imgXLoc[numPics]+imgScale*width/3.8)
+             .attr("x", imgXLoc[numPics]+imgScale*width/2)
              .attr("y", imgYLoc[numPics]-10)
              .attr("dy", ".35em")
              .attr("text-anchor", "middle")
             .style("background-color", "white")
-            .text(d.sample + ", Strain: "+d.strain +", Load (kg): " + d.Load_in_Kgs);
-            console.log(d);
+            .text("("+(numPics+1)+") "+d.sample + ", Strain: "+formatVal(d.strain) +", Load (kg): " + formatVal(d.Load_in_Kgs))
+            .style("font-size", "14px");
 
         //show image
         image.append("image")
         .attr("xlink:href", "./thumbnails/"+d.pic)
         .attr("x", imgXLoc[numPics])
         .attr("y", imgYLoc[numPics])
-        .attr("width", imgScale*width/1.9)
-        .attr("height", height/1.9);
+        .attr("width", imgScale*width)
+        .attr("height", imgScale*height);
             
         numPics = numPics +1;
     }
